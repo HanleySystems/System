@@ -1,8 +1,8 @@
-    const SUPABASE_URL = 'https://ehtrqdxbeqikjmjvmxii.supabase.co/rest/v1/';
+    const SUPABASE_URL = 'https://ehtrqdxbeqikjmjvmxii.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVodHJxZHhiZXFpa2ptanZteGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNTgyNzIsImV4cCI6MjA5NjkzNDI3Mn0.qYzsWqJnxyMLlUU9dN6q1enAKwlwo3MnwZRn_DLcPxk';
     const YARD_SLUG = 'yard1';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const overlay = document.querySelector('#overlay');
     const editor = document.querySelector('#editor');
     const list = document.querySelector('#containerList');
@@ -274,11 +274,32 @@
       editor.innerHTML = `<p class="empty">${escapeHtml(message)}</p>`;
     }
 
+    function hasValidSupabaseConfig() {
+      if (!window.supabase || !supabase) {
+        showMessage('Supabase could not load. Check your internet connection and the Supabase script tag in yard1.html.');
+        return false;
+      }
+
+      try {
+        const [, payload] = SUPABASE_ANON_KEY.split('.');
+        const decoded = JSON.parse(atob(payload.replaceAll('-', '+').replaceAll('_', '/')));
+        if (decoded.iss !== 'supabase' || decoded.role !== 'anon') {
+          showMessage('Supabase key looks incorrect. Paste the publishable or anon key again in yard1-supabase.js.');
+          return false;
+        }
+      } catch (error) {
+        showMessage('Supabase key is not valid. Paste the publishable or anon key again in yard1-supabase.js.');
+        return false;
+      }
+
+      return true;
+    }
+
     async function requireLogin() {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
       if (!data.session) {
-        showMessage('Please log in before using the yard manager.');
+        window.location.href = 'login.html';
         return false;
       }
       return true;
@@ -661,6 +682,7 @@
       showMessage('Loading Yard 1...');
 
       try {
+        if (!hasValidSupabaseConfig()) return;
         const loggedIn = await requireLogin();
         if (!loggedIn) return;
         await refreshFromSupabase();
