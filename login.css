@@ -16,7 +16,9 @@
 body {
   margin: 0;
   color: var(--ink);
-  background: var(--page);
+  background:
+    linear-gradient(rgba(17, 24, 39, 0.28), rgba(17, 24, 39, 0.28)),
+    url("background.jpg") center / cover no-repeat fixed;
 }
 
 .login-page {
