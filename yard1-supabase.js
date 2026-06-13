@@ -1,16 +1,14 @@
-    const storageKey = 'yard1-container-status-v1';
+    const supabaseUrl = 'https://ehtrqdxbeqikjmjvmxii.supabase.co/rest/v1/';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVodHJxZHhiZXFpa2ptanZteGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNTgyNzIsImV4cCI6MjA5NjkzNDI3Mn0.qYzsWqJnxyMLlUU9dN6q1enAKwlwo3MnwZRn_DLcPxk';
+    const YARD_SLUG = 'yard1';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const overlay = document.querySelector('#overlay');
     const editor = document.querySelector('#editor');
     const list = document.querySelector('#containerList');
     let selectedId = null;
-
-    const supabaseUrl = 'https://ehtrqdxbeqikjmjvmxii.supabase.co/rest/v1/';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVodHJxZHhiZXFpa2ptanZteGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNTgyNzIsImV4cCI6MjA5NjkzNDI3Mn0.qYzsWqJnxyMLlUU9dN6q1enAKwlwo3MnwZRn_DLcPxk';
-
-const supabase = window.supabase.createClient(
-  supabaseUrl,
-  supabaseAnonKey
-);
+    let yardId = null;
+    let state = {};
 
     const containers = [
       { id: 'C-001', x: 4424, y: 17, width: 63, height: 35 },
@@ -227,21 +225,18 @@ const supabase = window.supabase.createClient(
       { id: 'C-212', x: 2598, y: 1589, width: 32, height: 63 },
     ];
 
-    const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    const state = Object.fromEntries(containers.map((container) => [
-      container.id,
-      {
-        status: saved[container.id]?.status || 'available',
-        name: saved[container.id]?.name || container.id,
-        size: saved[container.id]?.size || inferSize(container),
-        customer: saved[container.id]?.customer || '',
-        phone: saved[container.id]?.phone || '',
-        notes: saved[container.id]?.notes || ''
-      }
-    ]));
+    function toDbStatus(status) {
+      return status === 'bad-debt' ? 'bad_debt' : status;
+    }
 
-    function save() {
-      localStorage.setItem(storageKey, JSON.stringify(state));
+    function fromDbStatus(status) {
+      return status === 'bad_debt' ? 'bad-debt' : status;
+    }
+
+    function rentalStatusFor(containerStatus) {
+      if (containerStatus === 'bad-debt') return 'bad_debt';
+      if (containerStatus === 'rented') return 'active';
+      return 'ended';
     }
 
     function labelFor(status) {
@@ -249,7 +244,7 @@ const supabase = window.supabase.createClient(
     }
 
     function escapeHtml(value) {
-      return String(value)
+      return String(value || '')
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')
@@ -258,7 +253,7 @@ const supabase = window.supabase.createClient(
     }
 
     function containerName(id) {
-      return state[id].name || id;
+      return state[id]?.name || id;
     }
 
     function inferSize(container) {
@@ -275,6 +270,204 @@ const supabase = window.supabase.createClient(
       return '';
     }
 
+    function showMessage(message) {
+      editor.innerHTML = `<p class="empty">${escapeHtml(message)}</p>`;
+    }
+
+    async function requireLogin() {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      if (!data.session) {
+        showMessage('Please log in before using the yard manager.');
+        return false;
+      }
+      return true;
+    }
+
+    async function loadYard() {
+      const { data, error } = await supabase
+        .from('yards')
+        .select('id, name, slug')
+        .eq('slug', YARD_SLUG)
+        .single();
+
+      if (error) throw error;
+      yardId = data.id;
+    }
+
+    async function seedMissingContainers() {
+      const rows = containers.map((container) => ({
+        yard_id: yardId,
+        internal_code: container.id,
+        display_name: container.id,
+        size_ft: Number(inferSize(container)),
+        status: 'available'
+      }));
+
+      const { error } = await supabase
+        .from('containers')
+        .upsert(rows, { onConflict: 'yard_id,internal_code', ignoreDuplicates: true });
+
+      if (error) throw error;
+    }
+
+    async function loadContainerState() {
+      const { data, error } = await supabase
+        .from('containers')
+        .select(`
+          id,
+          internal_code,
+          display_name,
+          size_ft,
+          status,
+          rentals (
+            id,
+            status,
+            notes,
+            customer_id,
+            customers (
+              id,
+              name,
+              phone,
+              notes
+            )
+          )
+        `)
+        .eq('yard_id', yardId);
+
+      if (error) throw error;
+
+      const dbByCode = Object.fromEntries(data.map((row) => [row.internal_code, row]));
+      state = Object.fromEntries(containers.map((container) => {
+        const row = dbByCode[container.id];
+        const activeRental = (row?.rentals || []).find((rental) => rental.status === 'active' || rental.status === 'bad_debt');
+        const customer = activeRental?.customers;
+
+        return [container.id, {
+          dbId: row?.id || null,
+          rentalId: activeRental?.id || null,
+          customerId: customer?.id || null,
+          status: fromDbStatus(row?.status || 'available'),
+          name: row?.display_name || container.id,
+          size: String(row?.size_ft || inferSize(container)),
+          customer: customer?.name || '',
+          phone: customer?.phone || '',
+          notes: activeRental?.notes || customer?.notes || ''
+        }];
+      }));
+    }
+
+    async function refreshFromSupabase() {
+      await loadYard();
+      await seedMissingContainers();
+      await loadContainerState();
+      renderOverlay();
+      renderEditor();
+      renderList();
+      updateCounts();
+    }
+
+    async function saveContainer(id) {
+      const item = state[id];
+      const container = containers.find((entry) => entry.id === id);
+      if (!item || !container) return;
+
+      if (!item.dbId) {
+        const { data, error } = await supabase
+          .from('containers')
+          .insert({
+            yard_id: yardId,
+            internal_code: id,
+            display_name: item.name || id,
+            size_ft: Number(item.size || inferSize(container)),
+            status: toDbStatus(item.status || 'available')
+          })
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        item.dbId = data.id;
+      } else {
+        const { error } = await supabase
+          .from('containers')
+          .update({
+            display_name: item.name || id,
+            size_ft: Number(item.size || inferSize(container)),
+            status: toDbStatus(item.status || 'available')
+          })
+          .eq('id', item.dbId);
+
+        if (error) throw error;
+      }
+
+      if (!item.customer) {
+        if (item.rentalId) {
+          const { error } = await supabase
+            .from('rentals')
+            .update({ status: 'ended', notes: item.notes || null })
+            .eq('id', item.rentalId);
+
+          if (error) throw error;
+        }
+        item.rentalId = null;
+        item.customerId = null;
+        return;
+      }
+
+      if (!item.customerId) {
+        const { data, error } = await supabase
+          .from('customers')
+          .insert({
+            name: item.customer,
+            phone: item.phone || null,
+            notes: item.notes || null
+          })
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        item.customerId = data.id;
+      } else {
+        const { error } = await supabase
+          .from('customers')
+          .update({
+            name: item.customer,
+            phone: item.phone || null,
+            notes: item.notes || null
+          })
+          .eq('id', item.customerId);
+
+        if (error) throw error;
+      }
+
+      if (!item.rentalId) {
+        const { data, error } = await supabase
+          .from('rentals')
+          .insert({
+            container_id: item.dbId,
+            customer_id: item.customerId,
+            status: rentalStatusFor(item.status),
+            notes: item.notes || null
+          })
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        item.rentalId = data.id;
+      } else {
+        const { error } = await supabase
+          .from('rentals')
+          .update({
+            customer_id: item.customerId,
+            status: rentalStatusFor(item.status),
+            notes: item.notes || null
+          })
+          .eq('id', item.rentalId);
+
+        if (error) throw error;
+      }
+    }
+
     function setSelected(id) {
       selectedId = id;
       renderEditor();
@@ -284,6 +477,7 @@ const supabase = window.supabase.createClient(
     function renderOverlay() {
       overlay.innerHTML = '';
       containers.forEach((container) => {
+        const item = state[container.id];
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.dataset.id = container.id;
         rect.setAttribute('x', container.x);
@@ -292,8 +486,8 @@ const supabase = window.supabase.createClient(
         rect.setAttribute('height', container.height);
         rect.setAttribute('tabindex', 0);
         rect.setAttribute('role', 'button');
-        rect.classList.add('container-unit', state[container.id].status);
-        rect.setAttribute('aria-label', `${containerName(container.id)}, ${state[container.id].size}ft, ${labelFor(state[container.id].status)}`);
+        rect.classList.add('container-unit', item.status);
+        rect.setAttribute('aria-label', `${containerName(container.id)}, ${item.size}ft, ${labelFor(item.status)}`);
         rect.addEventListener('click', () => setSelected(container.id));
         rect.addEventListener('keydown', (event) => {
           if (event.key === 'Enter' || event.key === ' ') {
@@ -310,7 +504,7 @@ const supabase = window.supabase.createClient(
         if (labelClass) label.classList.add(labelClass);
         label.setAttribute('x', container.x + (container.width / 2));
         label.setAttribute('y', container.y + (container.height / 2));
-        label.textContent = state[container.id].size;
+        label.textContent = item.size;
         overlay.append(label);
       });
     }
@@ -387,24 +581,40 @@ const supabase = window.supabase.createClient(
 
       editor.querySelector('#status').value = item.status;
       editor.querySelector('#size').value = item.size;
-      editor.querySelector('#clear').addEventListener('click', () => {
+      editor.querySelector('#clear').addEventListener('click', async () => {
         const selectedContainer = containers.find((container) => container.id === selectedId);
-        state[selectedId] = { status: 'available', name: selectedId, size: inferSize(selectedContainer), customer: '', phone: '', notes: '' };
-        save();
-        applyStatusClass(selectedId);
-        updateCounts();
-        renderEditor();
-        renderList();
+        state[selectedId] = {
+          ...state[selectedId],
+          status: 'available',
+          name: selectedId,
+          size: inferSize(selectedContainer),
+          customer: '',
+          phone: '',
+          notes: ''
+        };
+
+        try {
+          await saveContainer(selectedId);
+          applyStatusClass(selectedId);
+          updateCounts();
+          renderEditor();
+          renderList();
+        } catch (error) {
+          alert(`Could not clear container: ${error.message}`);
+        }
       });
     }
 
-    editor.addEventListener('submit', (event) => {
+    editor.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!selectedId) return;
+
       const customer = editor.querySelector('#customer').value.trim();
       const status = editor.querySelector('#status').value;
       const name = editor.querySelector('#containerName').value.trim() || selectedId;
+
       state[selectedId] = {
+        ...state[selectedId],
         status: customer && status === 'available' ? 'rented' : status,
         name,
         size: editor.querySelector('#size').value,
@@ -412,11 +622,16 @@ const supabase = window.supabase.createClient(
         phone: editor.querySelector('#phone').value.trim(),
         notes: editor.querySelector('#notes').value.trim()
       };
-      save();
-      applyStatusClass(selectedId);
-      updateCounts();
-      renderEditor();
-      renderList();
+
+      try {
+        await saveContainer(selectedId);
+        applyStatusClass(selectedId);
+        updateCounts();
+        renderEditor();
+        renderList();
+      } catch (error) {
+        alert(`Could not save container: ${error.message}`);
+      }
     });
 
     function renderList() {
@@ -442,7 +657,16 @@ const supabase = window.supabase.createClient(
       });
     }
 
-    renderOverlay();
-    renderEditor();
-    renderList();
-    updateCounts();
+    async function init() {
+      showMessage('Loading Yard 1...');
+
+      try {
+        const loggedIn = await requireLogin();
+        if (!loggedIn) return;
+        await refreshFromSupabase();
+      } catch (error) {
+        showMessage(`Could not load Yard 1: ${error.message}`);
+      }
+    }
+
+    init();
