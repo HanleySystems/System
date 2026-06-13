@@ -63,14 +63,17 @@
       text-overflow: ellipsis;
     }
 
-    button.logout {
-      min-height: 32px;
-      padding: 0 10px;
-      border-color: #185f3d;
-      background: #1f8b5b;
-      color: #fff;
-      font-size: 12px;
-    }
+   button.logout {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #185f3d;
+  border-radius: 7px;
+  background: #1f8b5b;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
 
     .title {
       display: flex;
