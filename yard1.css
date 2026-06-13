@@ -46,6 +46,32 @@
       border-radius: 8px;
     }
 
+    .account {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding-left: 8px;
+      white-space: nowrap;
+    }
+
+    #userEmail {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    button.logout {
+      min-height: 32px;
+      padding: 0 10px;
+      border-color: #185f3d;
+      background: #1f8b5b;
+      color: #fff;
+      font-size: 12px;
+    }
+
     .title {
       display: flex;
       align-items: baseline;
@@ -352,5 +378,9 @@
 
       .legend {
         justify-content: flex-start;
+      }
+
+      .account {
+        padding-left: 0;
       }
     }

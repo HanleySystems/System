@@ -6,9 +6,12 @@
     const overlay = document.querySelector('#overlay');
     const editor = document.querySelector('#editor');
     const list = document.querySelector('#containerList');
+    const userEmail = document.querySelector('#userEmail');
+    const logoutButton = document.querySelector('#logoutButton');
     let selectedId = null;
     let yardId = null;
     let state = {};
+    let currentSession = null;
 
     const containers = [
       { id: 'C-001', x: 4424, y: 17, width: 63, height: 35 },
@@ -302,7 +305,20 @@
         window.location.href = 'login.html';
         return false;
       }
+      currentSession = data.session;
+      if (userEmail) {
+        userEmail.textContent = currentSession.user?.email || 'Signed in';
+      }
       return true;
+    }
+
+    if (logoutButton) {
+      logoutButton.addEventListener('click', async () => {
+        logoutButton.disabled = true;
+        logoutButton.textContent = 'Logging out...';
+        await supabaseClient.auth.signOut();
+        window.location.href = 'login.html';
+      });
     }
 
     async function loadYard() {
