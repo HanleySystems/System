@@ -2,7 +2,7 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVodHJxZHhiZXFpa2ptanZteGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNTgyNzIsImV4cCI6MjA5NjkzNDI3Mn0.qYzsWqJnxyMLlUU9dN6q1enAKwlwo3MnwZRn_DLcPxk';
     const YARD_SLUG = 'yard1';
 
-    const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const overlay = document.querySelector('#overlay');
     const editor = document.querySelector('#editor');
     const list = document.querySelector('#containerList');
@@ -275,7 +275,7 @@
     }
 
     function hasValidSupabaseConfig() {
-      if (!window.supabase || !supabase) {
+      if (!window.supabase || !supabaseClient) {
         showMessage('Supabase could not load. Check your internet connection and the Supabase script tag in yard1.html.');
         return false;
       }
@@ -296,7 +296,7 @@
     }
 
     async function requireLogin() {
-      const { data, error } = await supabase.auth.getSession();
+      const { data, error } = await supabaseClient.auth.getSession();
       if (error) throw error;
       if (!data.session) {
         window.location.href = 'login.html';
@@ -306,7 +306,7 @@
     }
 
     async function loadYard() {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('yards')
         .select('id, name, slug')
         .eq('slug', YARD_SLUG)
@@ -325,7 +325,7 @@
         status: 'available'
       }));
 
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('containers')
         .upsert(rows, { onConflict: 'yard_id,internal_code', ignoreDuplicates: true });
 
@@ -333,7 +333,7 @@
     }
 
     async function loadContainerState() {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('containers')
         .select(`
           id,
@@ -394,7 +394,7 @@
       if (!item || !container) return;
 
       if (!item.dbId) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('containers')
           .insert({
             yard_id: yardId,
@@ -409,7 +409,7 @@
         if (error) throw error;
         item.dbId = data.id;
       } else {
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from('containers')
           .update({
             display_name: item.name || id,
@@ -423,7 +423,7 @@
 
       if (!item.customer) {
         if (item.rentalId) {
-          const { error } = await supabase
+          const { error } = await supabaseClient
             .from('rentals')
             .update({ status: 'ended', notes: item.notes || null })
             .eq('id', item.rentalId);
@@ -436,7 +436,7 @@
       }
 
       if (!item.customerId) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('customers')
           .insert({
             name: item.customer,
@@ -449,7 +449,7 @@
         if (error) throw error;
         item.customerId = data.id;
       } else {
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from('customers')
           .update({
             name: item.customer,
@@ -462,7 +462,7 @@
       }
 
       if (!item.rentalId) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('rentals')
           .insert({
             container_id: item.dbId,
@@ -476,7 +476,7 @@
         if (error) throw error;
         item.rentalId = data.id;
       } else {
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from('rentals')
           .update({
             customer_id: item.customerId,
