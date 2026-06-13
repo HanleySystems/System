@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yard 1 Container Manager</title>
+  <link rel="stylesheet" href="yard1.css">
+
+</head>
+<body>
+  <main class="app">
+    <section class="map-shell" aria-label="Warehouse grounds map">
+      <div class="toolbar">
+        <div class="title">
+          <h1>Yard 1</h1>
+          <span class="hint">Hover a container, click to edit</span>
+        </div>
+        <div class="legend" aria-label="Status legend">
+          <span><i class="swatch" style="background: var(--available)"></i>Available</span>
+          <span><i class="swatch" style="background: var(--rented)"></i>Rented</span>
+          <span><i class="swatch" style="background: var(--bad-debt)"></i>Bad debt</span>
+          <span>10 / 20 / 40ft</span>
+        </div>
+      </div>
+
+      <div class="plan-frame">
+        <div class="plan">
+          <img src="warehouse.png" alt="Warehouse ground layout">
+          <svg id="overlay" viewBox="0 0 4860 1800" role="img" aria-label="Interactive container positions"></svg>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel" aria-label="Container details">
+      <div class="summary">
+        <div class="metric"><strong id="availableCount">0</strong><span>Available</span></div>
+        <div class="metric"><strong id="rentedCount">0</strong><span>Rented</span></div>
+        <div class="metric"><strong id="badDebtCount">0</strong><span>Bad debt</span></div>
+      </div>
+
+      <form id="editor" class="editor">
+        <p class="empty">Select a container on the map or from the list to update its customer and status.</p>
+      </form>
+
+      <div id="containerList" class="list" aria-label="Container list"></div>
+    </aside>
+  </main>
+
+  <script src="yard1.js"></script>
+
+</body>
+</html>
