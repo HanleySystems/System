@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hanley Systems Login</title>
+  <link rel="stylesheet" href="login.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <main class="login-page">
+    <section class="login-card" aria-label="Staff login">
+      <div class="brand">
+        <p>Hanley Systems</p>
+        <h1>Staff Login</h1>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" required>
+
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+
+        <button id="submitButton" type="submit">Sign in</button>
+        <p id="message" class="message" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="login.js"></script>
+</body>
+</html>
