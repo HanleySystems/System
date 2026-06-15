@@ -266,7 +266,7 @@
 
     const WICKLOW_A_CONTAINERS = makeCells('WA', [
       { xs: [65, 157, 250, 343, 436, 529, 622, 715, 808, 901, 994, 1087, 1180], ys: [33, 105] },
-      { xs: [49, 113], ys: [138, 174, 211, 247, 283, 320, 356, 392, 429, 465, 502, 538, 574, 611, 647, 684, 720] },
+      { xs: [49, 113], ys: [138, 174, 211, 247, 283, 320, 356, 392, 429, 465, 502, 538, 574, 611, 647, 684, 720, 756] },
       { xs: [1180, 1254], ys: [162, 202, 243, 283, 324, 364, 405, 445, 485, 526, 566, 607] },
       { xs: [558, 647, 736], ys: [309, 341, 373, 405, 437, 469, 502, 534, 567] },
       { xs: [405, 506, 607, 708, 809, 910, 1011, 1112], ys: [786, 857] }
@@ -289,6 +289,7 @@
         image: 'warehouse.png',
         width: 4860,
         height: 1800,
+        displayWidth: 'max(1100px, 100%)',
         containers: NEWTOWN_CONTAINERS
       },
       wicklowA: {
@@ -297,6 +298,7 @@
         image: 'wicklow-yard-a.jpg',
         width: 1293,
         height: 889,
+        displayWidth: 'min(980px, 100%)',
         containers: WICKLOW_A_CONTAINERS
       },
       wicklowB: {
@@ -305,6 +307,7 @@
         image: 'wicklow-yard-b.jpg',
         width: 1293,
         height: 889,
+        displayWidth: 'min(980px, 100%)',
         containers: WICKLOW_B_CONTAINERS
       }
     };
@@ -449,6 +452,7 @@
       overlay.setAttribute('viewBox', `0 0 ${yard.width} ${yard.height}`);
       plan.style.setProperty('--plan-width', yard.width);
       plan.style.setProperty('--plan-height', yard.height);
+      plan.style.setProperty('--plan-display-width', yard.displayWidth);
       renderYardTabs();
     }
 

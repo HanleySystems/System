@@ -169,7 +169,8 @@ button.logout {
 }
 
 .plan {
-  width: max(1100px, 100%);
+  width: var(--plan-display-width, max(1100px, 100%));
+  margin: 0 auto;
   aspect-ratio: var(--plan-width, 4860) / var(--plan-height, 1800);
   position: relative;
 }
