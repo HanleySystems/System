@@ -289,7 +289,7 @@
         image: 'warehouse.png',
         width: 4860,
         height: 1800,
-        displayWidth: 'max(1300px, 100%)',
+        displayWidth: 'max(1100px, 100%)',
         containers: NEWTOWN_CONTAINERS
       },
       wicklowA: {
