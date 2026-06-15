@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Yard 1 Container Manager</title>
+  <title>Newtown Yard Container Manager</title>
   <link rel="stylesheet" href="yard1.css">
-
 </head>
 <body>
   <main class="app">
     <section class="map-shell" aria-label="Warehouse grounds map">
       <div class="toolbar">
         <div class="title">
-          <h1>Yard 1</h1>
+          <h1 id="yardTitle">Newtown Yard</h1>
           <span class="hint">Hover a container, click to edit</span>
         </div>
+        <div id="yardTabs" class="yard-tabs" aria-label="Choose yard"></div>
         <div class="legend" aria-label="Status legend">
           <span><i class="swatch" style="background: var(--available)"></i>Available</span>
           <span><i class="swatch" style="background: var(--rented)"></i>Rented</span>
@@ -27,9 +27,13 @@
         </div>
       </div>
 
+      <div class="active-yard">
+        Current yard: <strong id="activeYardName">Newtown Yard</strong>
+      </div>
+
       <div class="plan-frame">
-        <div class="plan">
-          <img src="warehouse.png" alt="Warehouse ground layout">
+        <div id="plan" class="plan">
+          <img id="planImage" src="warehouse.png" alt="Newtown Yard layout">
           <svg id="overlay" viewBox="0 0 4860 1800" role="img" aria-label="Interactive container positions"></svg>
         </div>
       </div>
@@ -52,6 +56,5 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="yard1-supabase.js"></script>
-
 </body>
 </html>

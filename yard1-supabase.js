@@ -1,6 +1,5 @@
     const SUPABASE_URL = 'https://ehtrqdxbeqikjmjvmxii.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVodHJxZHhiZXFpa2ptanZteGlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNTgyNzIsImV4cCI6MjA5NjkzNDI3Mn0.qYzsWqJnxyMLlUU9dN6q1enAKwlwo3MnwZRn_DLcPxk';
-    const YARD_SLUG = 'yard1';
 
     const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const overlay = document.querySelector('#overlay');
@@ -8,12 +7,19 @@
     const list = document.querySelector('#containerList');
     const userEmail = document.querySelector('#userEmail');
     const logoutButton = document.querySelector('#logoutButton');
+    const yardTabs = document.querySelector('#yardTabs');
+    const yardTitle = document.querySelector('#yardTitle');
+    const activeYardName = document.querySelector('#activeYardName');
+    const planImage = document.querySelector('#planImage');
+    const plan = document.querySelector('#plan');
+
     let selectedId = null;
     let yardId = null;
     let state = {};
     let currentSession = null;
+    let currentYardKey = localStorage.getItem('active-yard-key') || 'newtown';
 
-    const containers = [
+    const NEWTOWN_CONTAINERS = [
       { id: 'C-001', x: 4424, y: 17, width: 63, height: 35 },
       { id: 'C-002', x: 2465, y: 29, width: 32, height: 63 },
       { id: 'C-003', x: 2502, y: 29, width: 34, height: 63 },
@@ -228,6 +234,89 @@
       { id: 'C-212', x: 2598, y: 1589, width: 32, height: 63 },
     ];
 
+    function pad(number) {
+      return String(number).padStart(3, '0');
+    }
+
+    function cell(id, left, top, right, bottom) {
+      return {
+        id,
+        x: left + 1,
+        y: top + 1,
+        width: Math.max(1, right - left - 2),
+        height: Math.max(1, bottom - top - 2)
+      };
+    }
+
+    function makeCells(prefix, groups) {
+      const cells = [];
+      let index = 1;
+      groups.forEach((group) => {
+        const xs = group.xs;
+        const ys = group.ys;
+        for (let row = 0; row < ys.length - 1; row += 1) {
+          for (let col = 0; col < xs.length - 1; col += 1) {
+            cells.push(cell(`${prefix}-${pad(index)}`, xs[col], ys[row], xs[col + 1], ys[row + 1]));
+            index += 1;
+          }
+        }
+      });
+      return cells;
+    }
+
+    const WICKLOW_A_CONTAINERS = makeCells('WA', [
+      { xs: [65, 157, 250, 343, 436, 529, 622, 715, 808, 901, 994, 1087, 1180], ys: [33, 105] },
+      { xs: [49, 113], ys: [138, 174, 211, 247, 283, 320, 356, 392, 429, 465, 502, 538, 574, 611, 647, 684, 720] },
+      { xs: [1180, 1254], ys: [162, 202, 243, 283, 324, 364, 405, 445, 485, 526, 566, 607] },
+      { xs: [558, 647, 736], ys: [309, 341, 373, 405, 437, 469, 502, 534, 567] },
+      { xs: [405, 506, 607, 708, 809, 910, 1011, 1112], ys: [786, 857] }
+    ]);
+
+    const WICKLOW_B_CONTAINERS = makeCells('WB', [
+      { xs: [48, 138, 243, 299, 356, 412, 469, 526, 582, 639, 720, 809], ys: [33, 105] },
+      { xs: [32, 97], ys: [138, 183, 227, 272, 316, 361, 405, 450, 494, 539, 583, 628, 672, 716] },
+      { xs: [1197, 1261], ys: [138, 210] },
+      { xs: [1197, 1261], ys: [219, 251, 283, 316, 348, 381, 413, 445, 478, 510, 542, 575, 607, 639, 672, 704] },
+      { xs: [526, 615, 704], ys: [309, 341, 373, 405, 437, 469, 502, 534, 567] },
+      { xs: [162, 275, 389, 502, 615, 728], ys: [786, 857] },
+      { xs: [1197, 1261], ys: [786, 857] }
+    ]);
+
+    const yardConfigs = {
+      newtown: {
+        slug: 'yard1',
+        label: 'Newtown Yard',
+        image: 'warehouse.png',
+        width: 4860,
+        height: 1800,
+        containers: NEWTOWN_CONTAINERS
+      },
+      wicklowA: {
+        slug: 'yard2',
+        label: 'Wicklow Yard A',
+        image: 'wicklow-yard-a.jpg',
+        width: 1293,
+        height: 889,
+        containers: WICKLOW_A_CONTAINERS
+      },
+      wicklowB: {
+        slug: 'yard3',
+        label: 'Wicklow Yard B',
+        image: 'wicklow-yard-b.jpg',
+        width: 1293,
+        height: 889,
+        containers: WICKLOW_B_CONTAINERS
+      }
+    };
+
+    function getCurrentYard() {
+      return yardConfigs[currentYardKey] || yardConfigs.newtown;
+    }
+
+    function getContainers() {
+      return getCurrentYard().containers;
+    }
+
     function toDbStatus(status) {
       return status === 'bad-debt' ? 'bad_debt' : status;
     }
@@ -283,6 +372,11 @@
         return false;
       }
 
+      if (SUPABASE_ANON_KEY.includes('PASTE_YOUR')) {
+        showMessage('Paste your Supabase publishable or anon key into yard1-supabase.js before testing.');
+        return false;
+      }
+
       try {
         const [, payload] = SUPABASE_ANON_KEY.split('.');
         const decoded = JSON.parse(atob(payload.replaceAll('-', '+').replaceAll('_', '/')));
@@ -321,11 +415,49 @@
       });
     }
 
+    function renderYardTabs() {
+      yardTabs.innerHTML = '';
+      Object.entries(yardConfigs).forEach(([key, yard]) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = key === currentYardKey ? 'yard-tab active' : 'yard-tab';
+        button.textContent = yard.label;
+        button.setAttribute('aria-pressed', key === currentYardKey ? 'true' : 'false');
+        button.addEventListener('click', async () => {
+          if (key === currentYardKey) return;
+          currentYardKey = key;
+          localStorage.setItem('active-yard-key', currentYardKey);
+          selectedId = null;
+          showMessage(`Loading ${yard.label}...`);
+          try {
+            await refreshFromSupabase();
+          } catch (error) {
+            showMessage(`Could not load ${yard.label}: ${error.message}`);
+          }
+        });
+        yardTabs.append(button);
+      });
+    }
+
+    function renderYardShell() {
+      const yard = getCurrentYard();
+      yardTitle.textContent = yard.label;
+      activeYardName.textContent = yard.label;
+      document.title = `${yard.label} Container Manager`;
+      planImage.src = yard.image;
+      planImage.alt = `${yard.label} layout`;
+      overlay.setAttribute('viewBox', `0 0 ${yard.width} ${yard.height}`);
+      plan.style.setProperty('--plan-width', yard.width);
+      plan.style.setProperty('--plan-height', yard.height);
+      renderYardTabs();
+    }
+
     async function loadYard() {
+      const yard = getCurrentYard();
       const { data, error } = await supabaseClient
         .from('yards')
         .select('id, name, slug')
-        .eq('slug', YARD_SLUG)
+        .eq('slug', yard.slug)
         .single();
 
       if (error) throw error;
@@ -333,7 +465,7 @@
     }
 
     async function seedMissingContainers() {
-      const rows = containers.map((container) => ({
+      const rows = getContainers().map((container) => ({
         yard_id: yardId,
         internal_code: container.id,
         display_name: container.id,
@@ -349,6 +481,7 @@
     }
 
     async function loadContainerState() {
+      const containers = getContainers();
       const { data, error } = await supabaseClient
         .from('containers')
         .select(`
@@ -395,6 +528,7 @@
     }
 
     async function refreshFromSupabase() {
+      renderYardShell();
       await loadYard();
       await seedMissingContainers();
       await loadContainerState();
@@ -406,7 +540,7 @@
 
     async function saveContainer(id) {
       const item = state[id];
-      const container = containers.find((entry) => entry.id === id);
+      const container = getContainers().find((entry) => entry.id === id);
       if (!item || !container) return;
 
       if (!item.dbId) {
@@ -513,7 +647,7 @@
 
     function renderOverlay() {
       overlay.innerHTML = '';
-      containers.forEach((container) => {
+      getContainers().forEach((container) => {
         const item = state[container.id];
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.dataset.id = container.id;
@@ -619,7 +753,7 @@
       editor.querySelector('#status').value = item.status;
       editor.querySelector('#size').value = item.size;
       editor.querySelector('#clear').addEventListener('click', async () => {
-        const selectedContainer = containers.find((container) => container.id === selectedId);
+        const selectedContainer = getContainers().find((container) => container.id === selectedId);
         state[selectedId] = {
           ...state[selectedId],
           status: 'available',
@@ -673,7 +807,7 @@
 
     function renderList() {
       list.innerHTML = '';
-      containers.forEach((container) => {
+      getContainers().forEach((container) => {
         const item = state[container.id];
         const button = document.createElement('button');
         button.className = 'row';
@@ -695,7 +829,8 @@
     }
 
     async function init() {
-      showMessage('Loading Yard 1...');
+      renderYardShell();
+      showMessage(`Loading ${getCurrentYard().label}...`);
 
       try {
         if (!hasValidSupabaseConfig()) return;
@@ -703,7 +838,7 @@
         if (!loggedIn) return;
         await refreshFromSupabase();
       } catch (error) {
-        showMessage(`Could not load Yard 1: ${error.message}`);
+        showMessage(`Could not load ${getCurrentYard().label}: ${error.message}`);
       }
     }
 
