@@ -298,7 +298,7 @@
         image: 'wicklow-yard-a.jpg',
         width: 1293,
         height: 889,
-        displayWidth: 'min(980px, 100%)',
+        displayWidth: 'min(700px, 100%)',
         containers: WICKLOW_A_CONTAINERS
       },
       wicklowB: {
@@ -307,7 +307,7 @@
         image: 'wicklow-yard-b.jpg',
         width: 1293,
         height: 889,
-        displayWidth: 'min(980px, 100%)',
+        displayWidth: 'min(700px, 100%)',
         containers: WICKLOW_B_CONTAINERS
       }
     };
