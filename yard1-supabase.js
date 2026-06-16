@@ -18,6 +18,9 @@
     let state = {};
     let currentSession = null;
     let currentYardKey = localStorage.getItem('active-yard-key') || 'newtown';
+    let realtimeChannel = null;
+    let realtimeYardKey = null;
+    let realtimeRefreshTimer = null;
 
     const NEWTOWN_CONTAINERS = [
       { id: 'C-001', x: 4424, y: 17, width: 63, height: 35 },
@@ -540,6 +543,77 @@
       renderEditor();
       renderList();
       updateCounts();
+      subscribeToRealtimeUpdates();
+    }
+
+    function queueRealtimeRefresh() {
+      clearTimeout(realtimeRefreshTimer);
+
+      realtimeRefreshTimer = setTimeout(async () => {
+        const focusedElement = document.activeElement;
+        const userIsEditing = editor.contains(focusedElement);
+
+        try {
+          await loadContainerState();
+          renderOverlay();
+          renderList();
+          updateCounts();
+
+          if (!userIsEditing) {
+            renderEditor();
+          }
+        } catch (error) {
+          console.error('Realtime refresh failed:', error);
+        }
+      }, 300);
+    }
+
+    function subscribeToRealtimeUpdates() {
+      if (!supabaseClient || !yardId) return;
+
+      if (realtimeYardKey === currentYardKey && realtimeChannel) {
+        return;
+      }
+
+      if (realtimeChannel) {
+        supabaseClient.removeChannel(realtimeChannel);
+      }
+
+      realtimeYardKey = currentYardKey;
+
+      realtimeChannel = supabaseClient
+        .channel(`yard-live-updates-${getCurrentYard().slug}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'containers',
+            filter: `yard_id=eq.${yardId}`
+          },
+          queueRealtimeRefresh
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'rentals'
+          },
+          queueRealtimeRefresh
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'customers'
+          },
+          queueRealtimeRefresh
+        )
+        .subscribe((status) => {
+          console.log('Realtime status:', status);
+        });
     }
 
     async function saveContainer(id) {
