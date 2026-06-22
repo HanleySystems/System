@@ -50,6 +50,24 @@
         <p class="empty">Select a container on the map or from the list to update its customer and status.</p>
       </form>
 
+      <div class="filters" aria-label="Filter containers">
+        <input id="searchInput" type="search" placeholder="Search container or customer">
+        <div class="filter-row">
+          <select id="statusFilter" aria-label="Filter by status">
+            <option value="all">All statuses</option>
+            <option value="available">Available</option>
+            <option value="rented">Rented</option>
+            <option value="bad-debt">Bad debt</option>
+          </select>
+          <select id="sizeFilter" aria-label="Filter by size">
+            <option value="all">All sizes</option>
+            <option value="10">10ft</option>
+            <option value="20">20ft</option>
+            <option value="40">40ft</option>
+          </select>
+        </div>
+      </div>
+
       <div id="containerList" class="list" aria-label="Container list"></div>
     </aside>
   </main>

@@ -85,6 +85,11 @@ input:focus {
   border-color: var(--green);
 }
 
+input[aria-invalid="true"] {
+  border-color: #fca5a5;
+  outline-color: rgba(252, 165, 165, 0.38);
+}
+
 button {
   min-height: 42px;
   margin-top: 8px;
@@ -108,4 +113,12 @@ button:disabled {
   color: #fff;
   font-size: 13px;
   line-height: 1.4;
+}
+
+.message.error {
+  color: #ffe1e1;
+}
+
+.message.success {
+  color: #e6fff2;
 }

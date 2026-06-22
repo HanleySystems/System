@@ -12,6 +12,9 @@
     const activeYardName = document.querySelector('#activeYardName');
     const planImage = document.querySelector('#planImage');
     const plan = document.querySelector('#plan');
+    const searchInput = document.querySelector('#searchInput');
+    const statusFilter = document.querySelector('#statusFilter');
+    const sizeFilter = document.querySelector('#sizeFilter');
 
     let selectedId = null;
     let yardId = null;
@@ -21,6 +24,12 @@
     let realtimeChannel = null;
     let realtimeYardKey = null;
     let realtimeRefreshTimer = null;
+    let staffNames = {};
+    const filters = {
+      search: '',
+      status: 'all',
+      size: 'all'
+    };
 
     const NEWTOWN_CONTAINERS = [
       { id: 'C-001', x: 4424, y: 17, width: 63, height: 35 },
@@ -354,6 +363,22 @@
       return state[id]?.name || id;
     }
 
+    function staffName(id) {
+      if (!id) return '';
+      return staffNames[id] || (id === currentSession?.user?.id ? currentSession.user.email : 'Staff member');
+    }
+
+    function formatDateTime(value) {
+      if (!value) return '';
+      return new Intl.DateTimeFormat('en-IE', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(new Date(value));
+    }
+
     function inferSize(container) {
       const longestSide = Math.max(container.width, container.height);
       if (longestSide < 72) return '10';
@@ -416,8 +441,29 @@
       logoutButton.addEventListener('click', async () => {
         logoutButton.disabled = true;
         logoutButton.textContent = 'Logging out...';
-        await supabaseClient.auth.signOut();
-        window.location.href = 'login.html';
+        try {
+          if (realtimeChannel) {
+            await supabaseClient.removeChannel(realtimeChannel);
+            realtimeChannel = null;
+            realtimeYardKey = null;
+          }
+
+          const { error } = await supabaseClient.auth.signOut();
+          if (error) throw error;
+          window.location.href = 'login.html';
+        } catch (error) {
+          alert(`Could not log out: ${error.message}`);
+          logoutButton.disabled = false;
+          logoutButton.textContent = 'Logout';
+        }
+      });
+    }
+
+    if (supabaseClient) {
+      supabaseClient.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_OUT') {
+          window.location.href = 'login.html';
+        }
       });
     }
 
@@ -497,11 +543,17 @@
           display_name,
           size_ft,
           status,
+          updated_by,
+          updated_at,
           rentals (
             id,
             status,
             notes,
             customer_id,
+            created_by,
+            updated_by,
+            created_at,
+            updated_at,
             customers (
               id,
               name,
@@ -513,6 +565,30 @@
         .eq('yard_id', yardId);
 
       if (error) throw error;
+
+      const staffIds = new Set();
+      data.forEach((row) => {
+        if (row.updated_by) staffIds.add(row.updated_by);
+        (row.rentals || []).forEach((rental) => {
+          if (rental.created_by) staffIds.add(rental.created_by);
+          if (rental.updated_by) staffIds.add(rental.updated_by);
+        });
+      });
+
+      if (staffIds.size) {
+        const { data: profiles, error: profilesError } = await supabaseClient
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', [...staffIds]);
+
+        if (profilesError) throw profilesError;
+        staffNames = Object.fromEntries((profiles || []).map((profile) => [
+          profile.id,
+          profile.full_name || 'Staff member'
+        ]));
+      } else {
+        staffNames = {};
+      }
 
       const dbByCode = Object.fromEntries(data.map((row) => [row.internal_code, row]));
       state = Object.fromEntries(containers.map((container) => {
@@ -529,7 +605,13 @@
           size: String(row?.size_ft || inferSize(container)),
           customer: customer?.name || '',
           phone: customer?.phone || '',
-          notes: activeRental?.notes || customer?.notes || ''
+          notes: activeRental?.notes || customer?.notes || '',
+          updatedBy: row?.updated_by || '',
+          updatedAt: row?.updated_at || '',
+          rentalCreatedBy: activeRental?.created_by || '',
+          rentalUpdatedBy: activeRental?.updated_by || '',
+          rentalCreatedAt: activeRental?.created_at || '',
+          rentalUpdatedAt: activeRental?.updated_at || ''
         }];
       }));
     }
@@ -619,6 +701,7 @@
     async function saveContainer(id) {
       const item = state[id];
       const container = getContainers().find((entry) => entry.id === id);
+      const staffId = currentSession?.user?.id || null;
       if (!item || !container) return;
 
       if (!item.dbId) {
@@ -629,7 +712,8 @@
             internal_code: id,
             display_name: item.name || id,
             size_ft: Number(item.size || inferSize(container)),
-            status: toDbStatus(item.status || 'available')
+            status: toDbStatus(item.status || 'available'),
+            updated_by: staffId
           })
           .select('id')
           .single();
@@ -642,7 +726,8 @@
           .update({
             display_name: item.name || id,
             size_ft: Number(item.size || inferSize(container)),
-            status: toDbStatus(item.status || 'available')
+            status: toDbStatus(item.status || 'available'),
+            updated_by: staffId
           })
           .eq('id', item.dbId);
 
@@ -653,7 +738,7 @@
         if (item.rentalId) {
           const { error } = await supabaseClient
             .from('rentals')
-            .update({ status: 'ended', notes: item.notes || null })
+            .update({ status: 'ended', notes: item.notes || null, updated_by: staffId })
             .eq('id', item.rentalId);
 
           if (error) throw error;
@@ -696,7 +781,9 @@
             container_id: item.dbId,
             customer_id: item.customerId,
             status: rentalStatusFor(item.status),
-            notes: item.notes || null
+            notes: item.notes || null,
+            created_by: staffId,
+            updated_by: staffId
           })
           .select('id')
           .single();
@@ -709,7 +796,8 @@
           .update({
             customer_id: item.customerId,
             status: rentalStatusFor(item.status),
-            notes: item.notes || null
+            notes: item.notes || null,
+            updated_by: staffId
           })
           .eq('id', item.rentalId);
 
@@ -785,10 +873,18 @@
       }
 
       const item = state[selectedId];
+      const rentedBy = staffName(item.rentalCreatedBy || item.rentalUpdatedBy);
+      const changedBy = staffName(item.updatedBy || item.rentalUpdatedBy);
+      const changedAt = formatDateTime(item.rentalUpdatedAt || item.updatedAt);
       editor.innerHTML = `
         <div class="field">
           <label for="containerId">Container ID</label>
           <input id="containerId" value="${selectedId}" readonly>
+        </div>
+        <div class="metadata">
+          <span><strong>Rented by:</strong> ${escapeHtml(rentedBy || 'Not rented')}</span>
+          <span><strong>Last changed by:</strong> ${escapeHtml(changedBy || 'No changes yet')}</span>
+          <span><strong>Last changed:</strong> ${escapeHtml(changedAt || 'No timestamp yet')}</span>
         </div>
         <div class="field">
           <label for="containerName">Container name</label>
@@ -835,7 +931,6 @@
         state[selectedId] = {
           ...state[selectedId],
           status: 'available',
-          name: selectedId,
           size: inferSize(selectedContainer),
           customer: '',
           phone: '',
@@ -883,9 +978,36 @@
       }
     });
 
+    function matchesFilters(container, item) {
+      const term = filters.search.toLowerCase();
+      const haystack = [
+        container.id,
+        item.name,
+        item.customer,
+        item.phone,
+        item.notes,
+        labelFor(item.status),
+        item.size
+      ].join(' ').toLowerCase();
+
+      return (!term || haystack.includes(term))
+        && (filters.status === 'all' || item.status === filters.status)
+        && (filters.size === 'all' || item.size === filters.size);
+    }
+
     function renderList() {
       list.innerHTML = '';
-      getContainers().forEach((container) => {
+      const visibleContainers = getContainers().filter((container) => {
+        const item = state[container.id];
+        return item && matchesFilters(container, item);
+      });
+
+      if (!visibleContainers.length) {
+        list.innerHTML = '<p class="empty list-empty">No containers match the current filters.</p>';
+        return;
+      }
+
+      visibleContainers.forEach((container) => {
         const item = state[container.id];
         const button = document.createElement('button');
         button.className = 'row';
@@ -903,6 +1025,27 @@
           button.style.background = '#eaf3ff';
         }
         list.append(button);
+      });
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        filters.search = searchInput.value.trim();
+        renderList();
+      });
+    }
+
+    if (statusFilter) {
+      statusFilter.addEventListener('change', () => {
+        filters.status = statusFilter.value;
+        renderList();
+      });
+    }
+
+    if (sizeFilter) {
+      sizeFilter.addEventListener('change', () => {
+        filters.size = sizeFilter.value;
+        renderList();
       });
     }
 

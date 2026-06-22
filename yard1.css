@@ -289,6 +289,22 @@ button.logout {
   gap: 12px;
 }
 
+.metadata {
+  display: grid;
+  gap: 6px;
+  padding: 9px 10px;
+  border: 1px solid #dbe3ee;
+  border-radius: 7px;
+  background: #f8fafc;
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.metadata strong {
+  color: #243142;
+}
+
 .empty {
   color: var(--muted);
   line-height: 1.45;
@@ -326,6 +342,17 @@ textarea {
 }
 
 .actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.filters {
+  display: grid;
+  gap: 8px;
+}
+
+.filter-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
