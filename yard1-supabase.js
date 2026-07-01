@@ -6,6 +6,7 @@
     const editor = document.querySelector('#editor');
     const list = document.querySelector('#containerList');
     const userEmail = document.querySelector('#userEmail');
+    const adminLink = document.querySelector('#adminLink');
     const logoutButton = document.querySelector('#logoutButton');
     const yardTabs = document.querySelector('#yardTabs');
     const yardTitle = document.querySelector('#yardTitle');
@@ -441,6 +442,23 @@
       if (userEmail) {
         userEmail.textContent = currentSession.user?.email || 'Signed in';
       }
+
+      const { data: profile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('role, is_active')
+        .eq('id', currentSession.user.id)
+        .single();
+
+      if (profileError || !profile?.is_active) {
+        await supabaseClient.auth.signOut();
+        window.location.replace('login.html?reason=inactive');
+        return false;
+      }
+
+      if (adminLink) {
+        adminLink.hidden = profile.role !== 'admin';
+      }
+
       return true;
     }
 
@@ -525,12 +543,16 @@
     }
 
     async function seedMissingContainers() {
+      const staffId = currentSession?.user?.id;
+      if (!staffId) throw new Error('A signed-in staff account is required.');
+
       const rows = getContainers().map((container) => ({
         yard_id: yardId,
         internal_code: container.id,
         display_name: container.id,
         size_ft: Number(inferSize(container)),
-        status: 'available'
+        status: 'available',
+        updated_by: staffId
       }));
 
       const { error } = await supabaseClient
