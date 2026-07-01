@@ -190,6 +190,10 @@ button.logout {
   stroke: none;
 }
 
+.warehouse-feature {
+  pointer-events: none;
+}
+
 .container-unit:hover,
 .container-unit:focus {
   outline: none;

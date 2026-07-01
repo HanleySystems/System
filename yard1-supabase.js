@@ -302,6 +302,13 @@
         width: 4860,
         height: 1800,
         displayWidth: 'min(1400px, 100%)',
+        warehouseImage: {
+          image: 'hanley-removals-container.png',
+          x: 3138,
+          y: 259,
+          width: 900,
+          height: 1022
+        },
         containers: NEWTOWN_CONTAINERS
       },
       wicklowA: {
@@ -813,6 +820,20 @@
 
     function renderOverlay() {
       overlay.innerHTML = '';
+      const yard = getCurrentYard();
+
+      if (yard.warehouseImage) {
+        const warehouseImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        warehouseImage.setAttribute('href', yard.warehouseImage.image);
+        warehouseImage.setAttribute('x', yard.warehouseImage.x);
+        warehouseImage.setAttribute('y', yard.warehouseImage.y);
+        warehouseImage.setAttribute('width', yard.warehouseImage.width);
+        warehouseImage.setAttribute('height', yard.warehouseImage.height);
+        warehouseImage.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+        warehouseImage.classList.add('warehouse-feature');
+        overlay.append(warehouseImage);
+      }
+
       getContainers().forEach((container) => {
         const item = state[container.id];
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
