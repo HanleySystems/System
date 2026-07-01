@@ -158,6 +158,23 @@ button:disabled {
   cursor: wait;
 }
 
+.link-button {
+  min-height: 30px;
+  margin-top: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+:root[data-theme="dark"] .login-form > .link-button {
+  border: 0;
+  background: transparent;
+  color: #fff;
+}
+
 .message {
   min-height: 20px;
   margin: 4px 0 0;

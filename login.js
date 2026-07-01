@@ -5,6 +5,7 @@ const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON
 const form = document.querySelector('#loginForm');
 const message = document.querySelector('#message');
 const submitButton = document.querySelector('#submitButton');
+const resetPasswordButton = document.querySelector('#resetPasswordButton');
 const emailInput = document.querySelector('#email');
 const passwordInput = document.querySelector('#password');
 
@@ -66,7 +67,13 @@ async function redirectIfAlreadyLoggedIn() {
   }
 
   setLoading(false);
-  setMessage('');
+  const reason = new URLSearchParams(window.location.search).get('reason');
+  setMessage(
+    reason === 'inactive'
+      ? 'This staff account is inactive. Contact an administrator.'
+      : '',
+    reason === 'inactive' ? 'error' : ''
+  );
 }
 
 form.addEventListener('submit', async (event) => {
@@ -97,6 +104,36 @@ form.addEventListener('submit', async (event) => {
 
   setMessage('Signed in. Opening yard manager...', 'success');
   window.location.replace('yard1.html');
+});
+
+resetPasswordButton.addEventListener('click', async () => {
+  const email = emailInput.value.trim();
+
+  if (!email) {
+    emailInput.focus();
+    emailInput.setAttribute('aria-invalid', 'true');
+    setMessage('Enter your email address first.', 'error');
+    return;
+  }
+
+  resetPasswordButton.disabled = true;
+  resetPasswordButton.textContent = 'Sending reset link...';
+  setMessage('');
+
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: new URL('set-password.html', window.location.href).href
+  });
+
+  if (error) {
+    setMessage(friendlyAuthError(error), 'error');
+    resetPasswordButton.disabled = false;
+    resetPasswordButton.textContent = 'Forgot password?';
+    return;
+  }
+
+  setMessage('Check your email for a password reset link.', 'success');
+  resetPasswordButton.disabled = false;
+  resetPasswordButton.textContent = 'Forgot password?';
 });
 
 redirectIfAlreadyLoggedIn();
