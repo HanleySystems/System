@@ -486,6 +486,11 @@ button.danger {
   fill: rgba(10, 18, 24, 0.78);
 }
 
+:root[data-theme="dark"] #planImage {
+  filter: invert(1);
+  mix-blend-mode: screen;
+}
+
 @media (max-width: 1180px) {
   .toolbar {
     align-items: flex-start;
@@ -510,14 +515,4 @@ button.danger {
     border-left: 0;
     border-top: 1px solid var(--line);
   }
-
-  .plan,
-.plan-frame {
-  background: transparent;
-}
-
-:root[data-theme="dark"] .plan,
-:root[data-theme="dark"] .plan-frame {
-  background: var(--page);
-}
 }
