@@ -510,4 +510,14 @@ button.danger {
     border-left: 0;
     border-top: 1px solid var(--line);
   }
+
+  .plan,
+.plan-frame {
+  background: transparent;
+}
+
+:root[data-theme="dark"] .plan,
+:root[data-theme="dark"] .plan-frame {
+  background: var(--page);
+}
 }
