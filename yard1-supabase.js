@@ -315,7 +315,7 @@
       wicklowA: {
         slug: 'yard2',
         label: 'Wicklow Yard A',
-        image: 'wicklow-yard-a.jpg',
+        image: 'wicklow-yard-a.png',
         width: 1293,
         height: 889,
         displayWidth: 'min(980px, 100%)',
@@ -324,7 +324,7 @@
       wicklowB: {
         slug: 'yard3',
         label: 'Wicklow Yard B',
-        image: 'wicklow-yard-b.jpg',
+        image: 'wicklow-yard-b.png',
         width: 1293,
         height: 889,
         displayWidth: 'min(980px, 100%)',
