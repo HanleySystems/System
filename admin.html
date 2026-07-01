@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff Administration</title>
+  <script src="theme.js"></script>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="admin-header">
+    <div>
+      <p class="eyebrow">Hanley Systems</p>
+      <h1>Staff administration</h1>
+    </div>
+    <nav class="header-actions" aria-label="Account actions">
+      <span id="adminEmail">Checking account...</span>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Use dark mode" title="Use dark mode">☾</button>
+      <a href="yard1.html">Back to yards</a>
+      <button id="logoutButton" type="button">Logout</button>
+    </nav>
+  </header>
+
+  <main class="admin-main">
+    <section class="invite-section" aria-labelledby="inviteTitle">
+      <div>
+        <h2 id="inviteTitle">Invite staff member</h2>
+        <p>They will receive a secure link to choose their own password.</p>
+      </div>
+      <form id="inviteForm" class="invite-form">
+        <label>
+          Full name
+          <input id="inviteName" name="name" autocomplete="name" required>
+        </label>
+        <label>
+          Email address
+          <input id="inviteEmail" name="email" type="email" autocomplete="email" required>
+        </label>
+        <button id="inviteButton" class="primary" type="submit">Send invitation</button>
+      </form>
+      <p id="pageMessage" class="message" aria-live="polite"></p>
+    </section>
+
+    <section class="staff-section" aria-labelledby="staffTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="staffTitle">Staff accounts</h2>
+          <p>Deactivate accounts instead of deleting them to preserve activity history.</p>
+        </div>
+        <button id="refreshButton" class="secondary" type="button">Refresh</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Staff member</th>
+              <th scope="col">Role</th>
+              <th scope="col">Status</th>
+              <th scope="col">Last sign-in</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="staffTable">
+            <tr><td colspan="5" class="loading-cell">Loading staff...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

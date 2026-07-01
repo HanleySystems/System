@@ -6,7 +6,19 @@
   --page: #f4f6f8;
   --green: #1f8b5b;
   --green-dark: #176d47;
+  --control: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+:root[data-theme="dark"] {
+  --ink: #e8edf2;
+  --muted: #a6b2bf;
+  --line: #34404b;
+  --surface: #1c2329;
+  --page: #11171b;
+  --green: #238f60;
+  --green-dark: #176d47;
+  --control: #222b31;
 }
 
 * {
@@ -72,12 +84,12 @@ label {
 input {
   width: 100%;
   min-height: 42px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--line);
   border-radius: 7px;
   padding: 9px 10px;
   font: inherit;
   color: var(--ink);
-  background: #fff;
+  background: var(--control);
 }
 
 input:focus {
@@ -100,6 +112,45 @@ button {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.theme-toggle {
+  width: 38px;
+  min-height: 38px;
+  margin: 0;
+  padding: 0;
+  border-color: rgba(255, 255, 255, 0.56);
+  background: rgba(17, 24, 39, 0.66);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.page-theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+}
+
+:root[data-theme="dark"] body {
+  background:
+    linear-gradient(rgba(6, 12, 15, 0.58), rgba(6, 12, 15, 0.58)),
+    url("background.jpg") center / cover no-repeat fixed;
+}
+
+:root[data-theme="dark"] .login-card {
+  background: linear-gradient(145deg, #1d7a52 0%, #196a48 52%, #115039 100%);
+  border-color: #318d65;
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+:root[data-theme="dark"] .login-form > button:not(.theme-toggle) {
+  border-color: #d6eee2;
+  background: #e8f5ee;
+  color: #14583c;
 }
 
 button:disabled {

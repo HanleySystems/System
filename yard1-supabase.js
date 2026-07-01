@@ -1065,7 +1065,7 @@
           <span class="pill">${labelFor(item.status)}</span>
         `;
         if (container.id === selectedId) {
-          button.style.background = '#eaf3ff';
+          button.classList.add('selected');
         }
         list.append(button);
       });
