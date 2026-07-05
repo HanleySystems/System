@@ -8,12 +8,19 @@
 <body>
   <p>Opening <a href="yard1.html">DJHan Warehouse Container Manager</a>...</p>
   <script>
-    const isPasswordRecovery = new URLSearchParams(
-      window.location.hash.slice(1)
-    ).get('type') === 'recovery';
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const queryParams = new URLSearchParams(window.location.search);
+    const authType = hashParams.get('type') || queryParams.get('type');
+    const isPasswordCallback =
+      hashParams.has('access_token') ||
+      queryParams.has('code') ||
+      queryParams.has('token_hash') ||
+      ['recovery', 'invite', 'signup'].includes(authType);
 
-    if (isPasswordRecovery) {
-      window.location.replace(`set-password.html${window.location.hash}`);
+    if (isPasswordCallback) {
+      window.location.replace(
+        `set-password.html${window.location.search}${window.location.hash}`
+      );
     } else {
       window.location.replace('yard1.html');
     }
