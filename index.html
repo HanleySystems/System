@@ -3,13 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=yard1.html">
   <title>DJHan Warehouse Container Manager</title>
 </head>
 <body>
   <p>Opening <a href="yard1.html">DJHan Warehouse Container Manager</a>...</p>
   <script>
-    window.location.replace('yard1.html');
+    const isPasswordRecovery = new URLSearchParams(
+      window.location.hash.slice(1)
+    ).get('type') === 'recovery';
+
+    if (isPasswordRecovery) {
+      window.location.replace(`set-password.html${window.location.hash}`);
+    } else {
+      window.location.replace('yard1.html');
+    }
   </script>
 </body>
 </html>
