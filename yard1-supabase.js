@@ -277,6 +277,12 @@
       .map(remapNewtownContainer)
       .filter(Boolean);
 
+    // Two 20ft containers added to the revised plan at the upper centre.
+    const EXTRA_NEWTOWN_CONTAINERS = [
+      { id: 'C-213', x: 1385, y: 100, width: 73, height: 76 },
+      { id: 'C-214', x: 1384, y: 181, width: 73, height: 77 }
+    ];
+
     function pad(number) {
       return String(number).padStart(3, '0');
     }
@@ -341,7 +347,7 @@
           height: 1019
         },
         gates: [{ x: 2663, y: 1557, width: 328, height: 97 }],
-        containers: REMAPPED_NEWTOWN_CONTAINERS
+        containers: [...REMAPPED_NEWTOWN_CONTAINERS, ...EXTRA_NEWTOWN_CONTAINERS]
       },
       wicklowA: {
         slug: 'yard2',
