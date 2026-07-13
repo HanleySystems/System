@@ -13,6 +13,7 @@
     const activeYardName = document.querySelector('#activeYardName');
     const planImage = document.querySelector('#planImage');
     const plan = document.querySelector('#plan');
+    const containerTooltip = document.querySelector('#containerTooltip');
     const searchInput = document.querySelector('#searchInput');
     const statusFilter = document.querySelector('#statusFilter');
     const sizeFilter = document.querySelector('#sizeFilter');
@@ -305,11 +306,12 @@
         displayWidth: 'min(1400px, 100%)',
         warehouseImage: {
           image: 'hanley-removals-container.png',
-          x: 3138,
-          y: 259,
-          width: 900,
-          height: 1022
+          x: 2639,
+          y: 256,
+          width: 1158,
+          height: 1024
         },
+        gates: [{ x: 2655, y: 1554, width: 341, height: 101 }],
         containers: NEWTOWN_CONTAINERS
       },
       wicklowA: {
@@ -319,6 +321,7 @@
         width: 1293,
         height: 889,
         displayWidth: 'min(980px, 100%)',
+        gates: [{ x: 979, y: 793, width: 154, height: 64 }],
         containers: WICKLOW_A_CONTAINERS
       },
       wicklowB: {
@@ -328,6 +331,7 @@
         width: 1293,
         height: 889,
         displayWidth: 'min(980px, 100%)',
+        gates: [{ x: 173, y: 784, width: 202, height: 72 }],
         containers: WICKLOW_B_CONTAINERS
       }
     };
@@ -337,7 +341,19 @@
     }
 
     function getContainers() {
-      return getCurrentYard().containers;
+      const yard = getCurrentYard();
+      return yard.containers.filter((container) => !isInsideGate(container, yard.gates || []));
+    }
+
+    function isInsideGate(container, gates) {
+      const centerX = container.x + (container.width / 2);
+      const centerY = container.y + (container.height / 2);
+      return gates.some((gate) => (
+        centerX >= gate.x &&
+        centerX <= gate.x + gate.width &&
+        centerY >= gate.y &&
+        centerY <= gate.y + gate.height
+      ));
     }
 
     function toDbStatus(status) {
@@ -369,6 +385,31 @@
 
     function containerName(id) {
       return state[id]?.name || id;
+    }
+
+    function positionContainerTooltip(clientX, clientY) {
+      if (!containerTooltip || containerTooltip.hidden) return;
+
+      const margin = 12;
+      const offset = 14;
+      const maxLeft = window.innerWidth - containerTooltip.offsetWidth - margin;
+      const maxTop = window.innerHeight - containerTooltip.offsetHeight - margin;
+      containerTooltip.style.left = `${Math.max(margin, Math.min(clientX + offset, maxLeft))}px`;
+      containerTooltip.style.top = `${Math.max(margin, Math.min(clientY + offset, maxTop))}px`;
+    }
+
+    function showContainerTooltip(id, clientX, clientY) {
+      const item = state[id];
+      if (!containerTooltip || !item) return;
+
+      containerTooltip.querySelector('strong').textContent = containerName(id);
+      containerTooltip.querySelector('span').textContent = `${item.size}ft container`;
+      containerTooltip.hidden = false;
+      positionContainerTooltip(clientX, clientY);
+    }
+
+    function hideContainerTooltip() {
+      if (containerTooltip) containerTooltip.hidden = true;
     }
 
     function staffName(id) {
@@ -856,6 +897,17 @@
         overlay.append(warehouseImage);
       }
 
+      (yard.gates || []).forEach((gate) => {
+        const gateFeature = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        gateFeature.setAttribute('x', gate.x);
+        gateFeature.setAttribute('y', gate.y);
+        gateFeature.setAttribute('width', gate.width);
+        gateFeature.setAttribute('height', gate.height);
+        gateFeature.classList.add('gate-feature');
+        gateFeature.setAttribute('aria-label', 'Gate');
+        overlay.append(gateFeature);
+      });
+
       getContainers().forEach((container) => {
         const item = state[container.id];
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -869,12 +921,24 @@
         rect.classList.add('container-unit', item.status);
         rect.setAttribute('aria-label', `${containerName(container.id)}, ${item.size}ft, ${labelFor(item.status)}`);
         rect.addEventListener('click', () => setSelected(container.id));
+        rect.addEventListener('mouseenter', (event) => {
+          showContainerTooltip(container.id, event.clientX, event.clientY);
+        });
+        rect.addEventListener('mousemove', (event) => {
+          positionContainerTooltip(event.clientX, event.clientY);
+        });
+        rect.addEventListener('mouseleave', hideContainerTooltip);
         rect.addEventListener('keydown', (event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             setSelected(container.id);
           }
         });
+        rect.addEventListener('focus', () => {
+          const bounds = rect.getBoundingClientRect();
+          showContainerTooltip(container.id, bounds.right, bounds.top);
+        });
+        rect.addEventListener('blur', hideContainerTooltip);
         overlay.append(rect);
 
         const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');

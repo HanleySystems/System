@@ -213,6 +213,35 @@ button.logout,
   display: block;
 }
 
+.container-tooltip {
+  position: fixed;
+  z-index: 20;
+  display: grid;
+  gap: 2px;
+  min-width: 104px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 5px 16px rgba(20, 30, 25, 0.16);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.25;
+  pointer-events: none;
+}
+
+.container-tooltip[hidden] {
+  display: none;
+}
+
+.container-tooltip strong {
+  font-size: 12px;
+}
+
+.container-tooltip span {
+  color: var(--muted);
+}
+
 .container-unit {
   cursor: pointer;
   transition: fill 140ms ease;
@@ -220,6 +249,12 @@ button.logout,
 }
 
 .warehouse-feature {
+  pointer-events: none;
+}
+
+.gate-feature {
+  fill: #f0a248;
+  fill-opacity: 0.42;
   pointer-events: none;
 }
 
@@ -279,12 +314,16 @@ button.logout,
 
 .panel {
   min-width: 0;
+  height: 100vh;
   padding: 16px;
   background: var(--surface);
   border-left: 1px solid var(--line);
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow: hidden;
+  position: sticky;
+  top: 0;
 }
 
 .summary {
@@ -414,6 +453,7 @@ button.danger {
 }
 
 .list {
+  flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
   border: 1px solid var(--line);
@@ -486,6 +526,10 @@ button.danger {
   fill: rgba(10, 18, 24, 0.78);
 }
 
+:root[data-theme="dark"] .container-tooltip {
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.38);
+}
+
 :root[data-theme="dark"] #planImage {
   filter: invert(1);
   mix-blend-mode: screen;
@@ -512,7 +556,15 @@ button.danger {
   }
 
   .panel {
+    height: auto;
     border-left: 0;
     border-top: 1px solid var(--line);
+    overflow: visible;
+    position: static;
+  }
+
+  .list {
+    flex: none;
+    max-height: 420px;
   }
 }
