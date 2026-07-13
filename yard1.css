@@ -314,16 +314,12 @@ button.logout,
 
 .panel {
   min-width: 0;
-  height: 100vh;
   padding: 16px;
   background: var(--surface);
   border-left: 1px solid var(--line);
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow: hidden;
-  position: sticky;
-  top: 0;
 }
 
 .summary {
@@ -453,7 +449,6 @@ button.danger {
 }
 
 .list {
-  flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
   border: 1px solid var(--line);
@@ -556,15 +551,7 @@ button.danger {
   }
 
   .panel {
-    height: auto;
     border-left: 0;
     border-top: 1px solid var(--line);
-    overflow: visible;
-    position: static;
-  }
-
-  .list {
-    flex: none;
-    max-height: 420px;
   }
 }

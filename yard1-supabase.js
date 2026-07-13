@@ -248,6 +248,35 @@
       { id: 'C-212', x: 2598, y: 1589, width: 32, height: 63 },
     ];
 
+    function remapNewtownContainer(container) {
+      // The revised plan moves the upper-left and lower-left blocks separately.
+      if (container.id === 'C-061') return null;
+
+      let x = container.x - 1086;
+      let y = container.y - 3;
+
+      if (container.y >= 1300 && container.x < 2100) {
+        x = container.x - 479;
+      } else if (container.x < 800) {
+        x = container.x - 127;
+        y = container.y + 161;
+      }
+
+      const scaleX = 4860 / 3774;
+      const scaleY = 1800 / 1797;
+      return {
+        ...container,
+        x: x * scaleX,
+        y: y * scaleY,
+        width: container.width * scaleX,
+        height: container.height * scaleY
+      };
+    }
+
+    const REMAPPED_NEWTOWN_CONTAINERS = NEWTOWN_CONTAINERS
+      .map(remapNewtownContainer)
+      .filter(Boolean);
+
     function pad(number) {
       return String(number).padStart(3, '0');
     }
@@ -283,17 +312,17 @@
       { xs: [49, 113], ys: [138, 174, 211, 247, 283, 320, 356, 392, 429, 465, 502, 538, 574, 611, 647, 684, 720, 756] },
       { xs: [1180, 1254], ys: [162, 202, 243, 283, 324, 364, 405, 445, 485, 526, 566, 607] },
       { xs: [558, 647, 736], ys: [309, 341, 373, 405, 437, 469, 502, 534, 567] },
-      { xs: [405, 506, 607, 708, 809, 910, 1011, 1112], ys: [786, 857] }
+      { xs: [235, 336, 437, 538, 639, 740, 841, 942], ys: [786, 857] }
     ]);
 
     const WICKLOW_B_CONTAINERS = makeCells('WB', [
       { xs: [48, 138, 243, 299, 356, 412, 469, 526, 582, 639, 720, 809], ys: [33, 105] },
       { xs: [32, 97], ys: [138, 183, 227, 272, 316, 361, 405, 450, 494, 539, 583, 628, 672, 716] },
-      { xs: [1197, 1261], ys: [138, 210] },
-      { xs: [1197, 1261], ys: [219, 251, 283, 316, 348, 381, 413, 445, 478, 510, 542, 575, 607, 639, 672, 704] },
+      { xs: [1085, 1151], ys: [138, 210] },
+      { xs: [1085, 1151], ys: [219, 251, 283, 316, 348, 381, 413, 445, 478, 510, 542, 575, 607, 639, 672, 704] },
       { xs: [526, 615, 704], ys: [309, 341, 373, 405, 437, 469, 502, 534, 567] },
-      { xs: [162, 275, 389, 502, 615, 728], ys: [786, 857] },
-      { xs: [1197, 1261], ys: [786, 857] }
+      { xs: [437, 551, 664, 778, 891, 1004], ys: [786, 857] },
+      { xs: [1085, 1151], ys: [786, 857] }
     ]);
 
     const yardConfigs = {
@@ -306,13 +335,13 @@
         displayWidth: 'min(1400px, 100%)',
         warehouseImage: {
           image: 'hanley-removals-container.png',
-          x: 2639,
-          y: 256,
-          width: 1158,
-          height: 1024
+          x: 2646,
+          y: 257,
+          width: 1147,
+          height: 1019
         },
-        gates: [{ x: 2655, y: 1554, width: 341, height: 101 }],
-        containers: NEWTOWN_CONTAINERS
+        gates: [{ x: 2663, y: 1557, width: 328, height: 97 }],
+        containers: REMAPPED_NEWTOWN_CONTAINERS
       },
       wicklowA: {
         slug: 'yard2',
@@ -321,7 +350,7 @@
         width: 1293,
         height: 889,
         displayWidth: 'min(980px, 100%)',
-        gates: [{ x: 979, y: 793, width: 154, height: 64 }],
+        gates: [{ x: 980, y: 793, width: 153, height: 63 }],
         containers: WICKLOW_A_CONTAINERS
       },
       wicklowB: {
@@ -331,7 +360,7 @@
         width: 1293,
         height: 889,
         displayWidth: 'min(980px, 100%)',
-        gates: [{ x: 173, y: 784, width: 202, height: 72 }],
+        gates: [{ x: 173, y: 783, width: 203, height: 74 }],
         containers: WICKLOW_B_CONTAINERS
       }
     };
