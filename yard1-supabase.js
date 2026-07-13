@@ -250,7 +250,7 @@
 
     function remapNewtownContainer(container) {
       // The revised plan moves the upper-left and lower-left blocks separately.
-      if (container.id === 'C-061') return null;
+      if (['C-061', 'C-183', 'C-184', 'C-185', 'C-186'].includes(container.id)) return null;
 
       let x = container.x - 1086;
       let y = container.y - 3;
