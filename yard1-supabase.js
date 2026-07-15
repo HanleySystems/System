@@ -339,13 +339,22 @@
         width: 4860,
         height: 1800,
         displayWidth: 'min(1400px, 100%)',
-        warehouseImage: {
-          image: 'hanley-removals-container.png',
-          x: 2646,
-          y: 257,
-          width: 1147,
-          height: 1019
-        },
+        featureImages: [
+          {
+            image: 'hanley-removals-container.png',
+            x: 2646,
+            y: 257,
+            width: 1147,
+            height: 1019
+          },
+          {
+            image: 'hanley-removals-container.png',
+            x: 262,
+            y: 329,
+            width: 1040,
+            height: 1030
+          }
+        ],
         gates: [{ x: 2663, y: 1557, width: 328, height: 97 }],
         containers: [...REMAPPED_NEWTOWN_CONTAINERS, ...EXTRA_NEWTOWN_CONTAINERS]
       },
@@ -920,17 +929,17 @@
       overlay.innerHTML = '';
       const yard = getCurrentYard();
 
-      if (yard.warehouseImage) {
-        const warehouseImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-        warehouseImage.setAttribute('href', yard.warehouseImage.image);
-        warehouseImage.setAttribute('x', yard.warehouseImage.x);
-        warehouseImage.setAttribute('y', yard.warehouseImage.y);
-        warehouseImage.setAttribute('width', yard.warehouseImage.width);
-        warehouseImage.setAttribute('height', yard.warehouseImage.height);
-        warehouseImage.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-        warehouseImage.classList.add('warehouse-feature');
-        overlay.append(warehouseImage);
-      }
+      (yard.featureImages || []).forEach((feature) => {
+        const featureImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        featureImage.setAttribute('href', feature.image);
+        featureImage.setAttribute('x', feature.x);
+        featureImage.setAttribute('y', feature.y);
+        featureImage.setAttribute('width', feature.width);
+        featureImage.setAttribute('height', feature.height);
+        featureImage.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+        featureImage.classList.add('warehouse-feature');
+        overlay.append(featureImage);
+      });
 
       (yard.gates || []).forEach((gate) => {
         const gateFeature = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
