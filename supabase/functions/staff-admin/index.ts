@@ -123,6 +123,32 @@ Deno.serve(async (request) => {
       return json({ success: true });
     }
 
+    if (action === 'delete') {
+      const { data: targetProfile, error: targetProfileError } = await adminClient
+        .from('profiles')
+        .select('role, is_active')
+        .eq('id', targetUserId)
+        .single();
+      if (targetProfileError) throw targetProfileError;
+
+      if (targetProfile?.role === 'admin' && targetProfile.is_active) {
+        const { count, error: countError } = await adminClient
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('role', 'admin')
+          .eq('is_active', true);
+        if (countError) throw countError;
+        if ((count || 0) <= 1) {
+          return json({ error: 'You cannot delete the last active administrator.' }, 400);
+        }
+      }
+
+      const { error } = await adminClient.auth.admin.deleteUser(targetUserId);
+      if (error) throw error;
+
+      return json({ success: true });
+    }
+
     if (action === 'set-role') {
       const role = String(body.role || '');
       if (!['staff', 'admin'].includes(role)) {

@@ -88,6 +88,7 @@ function renderStaff(users) {
           <div class="row-actions">
             <button class="row-action reset-action" type="button" data-email="${escapeHtml(user.email)}">Reset password</button>
             <button class="row-action ${active ? 'danger' : ''} status-action" type="button" data-action="${action}" data-user-id="${user.id}" ${isCurrentUser ? 'disabled' : ''}>${actionLabel}</button>
+            <button class="row-action danger delete-action" type="button" data-user-id="${user.id}" data-name="${escapeHtml(user.full_name || user.email)}" ${isCurrentUser ? 'disabled' : ''}>Delete</button>
           </div>
         </td>
       </tr>
@@ -164,9 +165,18 @@ inviteForm.addEventListener('submit', async (event) => {
 staffTable.addEventListener('click', async (event) => {
   const statusButton = event.target.closest('.status-action');
   const resetButton = event.target.closest('.reset-action');
-  if (!statusButton && !resetButton) return;
+  const deleteButton = event.target.closest('.delete-action');
+  if (!statusButton && !resetButton && !deleteButton) return;
 
-  const button = statusButton || resetButton;
+  if (deleteButton) {
+    const staffName = deleteButton.dataset.name || 'this staff member';
+    const confirmed = window.confirm(
+      `Permanently delete ${staffName}? This removes their login and cannot be undone.`
+    );
+    if (!confirmed) return;
+  }
+
+  const button = statusButton || resetButton || deleteButton;
   button.disabled = true;
   setMessage('');
 
@@ -177,13 +187,19 @@ staffTable.addEventListener('click', async (event) => {
       });
       setMessage(`Staff account ${statusButton.dataset.action === 'deactivate' ? 'deactivated' : 'reactivated'}.`);
       await loadStaff();
-    } else {
+    } else if (resetButton) {
       const { error } = await supabaseClient.auth.resetPasswordForEmail(
         resetButton.dataset.email,
         { redirectTo: new URL('set-password.html', window.location.href).href }
       );
       if (error) throw error;
       setMessage('Password reset email sent.');
+    } else {
+      await callAdminFunction('delete', {
+        userId: deleteButton.dataset.userId
+      });
+      setMessage('Staff account permanently deleted.');
+      await loadStaff();
     }
   } catch (error) {
     setMessage(error.message, true);
