@@ -249,17 +249,27 @@
     ];
 
     function remapNewtownContainer(container) {
-      // The revised plan moves the upper-left and lower-left blocks separately.
-      if (['C-061', 'C-183', 'C-184', 'C-185', 'C-186'].includes(container.id)) return null;
+      // The revised plan removes these former positions altogether.
+      if (['C-061', 'C-176', 'C-183', 'C-184', 'C-185', 'C-186', 'C-187', 'C-208'].includes(container.id)) return null;
 
       let x = container.x - 1086;
       let y = container.y - 3;
 
       if (container.y >= 1300 && container.x < 2100) {
         x = container.x - 479;
+      } else if (container.x === 2105) {
+        // This centre-left run now starts lower on the current plan.
+        y += 488;
+      } else if (container.x === 2249 && container.y >= 395) {
+        // This centre-right run now starts lower on the current plan.
+        y += 458;
       } else if (container.x < 800) {
         x = container.x - 127;
         y = container.y + 161;
+        if (container.x === 161) {
+          // The far-left vertical run was moved lower as a complete block.
+          y += 263;
+        }
       }
 
       const scaleX = 4860 / 3774;
