@@ -268,7 +268,7 @@ button.logout,
 }
 
 .rented {
-  fill: color-mix(in srgb, var(--rented) 36%, transparent);
+  fill: var(--rented);
 }
 
 .bad-debt {
