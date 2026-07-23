@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Newtown Yard Container Manager</title>
   <script src="theme.js"></script>
-  <link rel="stylesheet" href="yard1.css?v=20260723-3">
+  <link rel="stylesheet" href="yard1.css?v=20260723-4">
 </head>
 <body>
   <main class="app">
@@ -38,6 +38,7 @@
         <div id="plan" class="plan">
           <img id="planImage" src="warehouse.png" alt="Newtown Yard layout" style="z-index: 0">
           <svg id="overlay" viewBox="0 0 4860 1800" role="img" aria-label="Interactive container positions" style="z-index: 2"></svg>
+          <svg id="priorityOverlay" viewBox="0 0 4860 1800" aria-hidden="true"></svg>
         </div>
         <div id="containerTooltip" class="container-tooltip" role="tooltip" hidden>
           <strong></strong>
@@ -80,6 +81,6 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="yard1-supabase.js?v=20260723-3"></script>
+  <script src="yard1-supabase.js?v=20260723-4"></script>
 </body>
 </html>

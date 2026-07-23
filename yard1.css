@@ -222,6 +222,11 @@ button.logout,
   z-index: 1;
 }
 
+/* Handles the three Newtown cells that sit over an opaque part of the plan image. */
+#priorityOverlay {
+  z-index: 4;
+}
+
 .container-tooltip {
   position: fixed;
   z-index: 20;
