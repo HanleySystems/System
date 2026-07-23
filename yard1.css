@@ -264,7 +264,7 @@ button.logout,
 }
 
 .available {
-  fill: color-mix(in srgb, var(--available) 32%, transparent);
+  fill: var(--available);
 }
 
 .rented {
