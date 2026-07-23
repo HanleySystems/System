@@ -493,8 +493,8 @@
 
     function labelClassFor(container) {
       const shortestSide = Math.min(container.width, container.height);
-      if (shortestSide < 24) return 'tiny';
-      if (shortestSide < 42) return 'small';
+      if (shortestSide < 70) return 'tiny';
+      if (shortestSide < 120) return 'small';
       return '';
     }
 

@@ -306,10 +306,12 @@ button.logout,
 
 .size-label.small {
   font-size: 24px;
+  stroke-width: 2px;
 }
 
 .size-label.tiny {
   font-size: 18px;
+  stroke-width: 1.5px;
 }
 
 .panel {
