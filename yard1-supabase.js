@@ -13,7 +13,6 @@
     const activeYardName = document.querySelector('#activeYardName');
     const planImage = document.querySelector('#planImage');
     const plan = document.querySelector('#plan');
-    const priorityOverlay = document.querySelector('#priorityOverlay');
     const containerTooltip = document.querySelector('#containerTooltip');
     const searchInput = document.querySelector('#searchInput');
     const statusFilter = document.querySelector('#statusFilter');
@@ -293,8 +292,6 @@
       { id: 'C-213', x: 1385, y: 100, width: 73, height: 76 },
       { id: 'C-214', x: 1384, y: 181, width: 73, height: 77 }
     ];
-
-    const PRIORITY_NEWTOWN_CONTAINER_IDS = new Set(['C-039', 'C-057', 'C-060']);
 
     function pad(number) {
       return String(number).padStart(3, '0');
@@ -624,7 +621,6 @@
       planImage.src = yard.image;
       planImage.alt = `${yard.label} layout`;
       overlay.setAttribute('viewBox', `0 0 ${yard.width} ${yard.height}`);
-      priorityOverlay.setAttribute('viewBox', `0 0 ${yard.width} ${yard.height}`);
       plan.style.setProperty('--plan-width', yard.width);
       plan.style.setProperty('--plan-height', yard.height);
       plan.style.setProperty('--plan-display-width', yard.displayWidth);
@@ -941,54 +937,6 @@
       renderList();
     }
 
-    function appendInteractiveContainer(target, container) {
-      const item = state[container.id];
-      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      rect.dataset.id = container.id;
-      rect.setAttribute('x', container.x);
-      rect.setAttribute('y', container.y);
-      rect.setAttribute('width', container.width);
-      rect.setAttribute('height', container.height);
-      rect.setAttribute('tabindex', 0);
-      rect.setAttribute('role', 'button');
-      rect.classList.add('container-unit', item.status);
-      rect.setAttribute('aria-label', `${containerName(container.id)}, ${item.size}ft, ${labelFor(item.status)}`);
-      rect.addEventListener('click', () => setSelected(container.id));
-      rect.addEventListener('mouseenter', (event) => showContainerTooltip(container.id, event.clientX, event.clientY));
-      rect.addEventListener('mousemove', (event) => positionContainerTooltip(event.clientX, event.clientY));
-      rect.addEventListener('mouseleave', hideContainerTooltip);
-      rect.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          setSelected(container.id);
-        }
-      });
-      rect.addEventListener('focus', () => {
-        const bounds = rect.getBoundingClientRect();
-        showContainerTooltip(container.id, bounds.right, bounds.top);
-      });
-      rect.addEventListener('blur', hideContainerTooltip);
-      target.append(rect);
-
-      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      label.dataset.labelFor = container.id;
-      label.classList.add('size-label');
-      const labelClass = labelClassFor(container);
-      if (labelClass) label.classList.add(labelClass);
-      label.setAttribute('x', container.x + (container.width / 2));
-      label.setAttribute('y', container.y + (container.height / 2));
-      label.textContent = item.size;
-      target.append(label);
-    }
-
-    function renderPriorityOverlay() {
-      priorityOverlay.innerHTML = '';
-      if (currentYardKey !== 'newtown') return;
-      getContainers()
-        .filter((container) => PRIORITY_NEWTOWN_CONTAINER_IDS.has(container.id))
-        .forEach((container) => appendInteractiveContainer(priorityOverlay, container));
-    }
-
     function renderOverlay() {
       overlay.innerHTML = '';
       const yard = getCurrentYard();
@@ -1016,8 +964,49 @@
         overlay.append(gateFeature);
       });
 
-      getContainers().forEach((container) => appendInteractiveContainer(overlay, container));
-      renderPriorityOverlay();
+      getContainers().forEach((container) => {
+        const item = state[container.id];
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.dataset.id = container.id;
+        rect.setAttribute('x', container.x);
+        rect.setAttribute('y', container.y);
+        rect.setAttribute('width', container.width);
+        rect.setAttribute('height', container.height);
+        rect.setAttribute('tabindex', 0);
+        rect.setAttribute('role', 'button');
+        rect.classList.add('container-unit', item.status);
+        rect.setAttribute('aria-label', `${containerName(container.id)}, ${item.size}ft, ${labelFor(item.status)}`);
+        rect.addEventListener('click', () => setSelected(container.id));
+        rect.addEventListener('mouseenter', (event) => {
+          showContainerTooltip(container.id, event.clientX, event.clientY);
+        });
+        rect.addEventListener('mousemove', (event) => {
+          positionContainerTooltip(event.clientX, event.clientY);
+        });
+        rect.addEventListener('mouseleave', hideContainerTooltip);
+        rect.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setSelected(container.id);
+          }
+        });
+        rect.addEventListener('focus', () => {
+          const bounds = rect.getBoundingClientRect();
+          showContainerTooltip(container.id, bounds.right, bounds.top);
+        });
+        rect.addEventListener('blur', hideContainerTooltip);
+        overlay.append(rect);
+
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.dataset.labelFor = container.id;
+        label.classList.add('size-label');
+        const labelClass = labelClassFor(container);
+        if (labelClass) label.classList.add(labelClass);
+        label.setAttribute('x', container.x + (container.width / 2));
+        label.setAttribute('y', container.y + (container.height / 2));
+        label.textContent = item.size;
+        overlay.append(label);
+      });
     }
 
     function updateCounts() {
@@ -1031,15 +1020,13 @@
     }
 
     function applyStatusClass(id) {
-      const units = document.querySelectorAll(`[data-id="${CSS.escape(id)}"]`);
-      units.forEach((unit) => {
-        unit.classList.remove('available', 'rented', 'bad-debt');
-        unit.classList.add(state[id].status);
-        unit.setAttribute('aria-label', `${containerName(id)}, ${state[id].size}ft, ${labelFor(state[id].status)}`);
-      });
-      document.querySelectorAll(`[data-label-for="${CSS.escape(id)}"]`).forEach((label) => {
-        label.textContent = state[id].size;
-      });
+      const unit = document.querySelector(`[data-id="${CSS.escape(id)}"]`);
+      if (!unit) return;
+      unit.classList.remove('available', 'rented', 'bad-debt');
+      unit.classList.add(state[id].status);
+      unit.setAttribute('aria-label', `${containerName(id)}, ${state[id].size}ft, ${labelFor(state[id].status)}`);
+      const label = document.querySelector(`[data-label-for="${CSS.escape(id)}"]`);
+      if (label) label.textContent = state[id].size;
     }
 
     function renderEditor() {
