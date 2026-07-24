@@ -287,10 +287,13 @@
       .map(remapNewtownContainer)
       .filter(Boolean);
 
-    // Two 20ft containers added to the revised plan at the upper centre.
+    // Newtown cells present on the current plan but not in the original drawing.
     const EXTRA_NEWTOWN_CONTAINERS = [
       { id: 'C-213', x: 1385, y: 100, width: 73, height: 76 },
-      { id: 'C-214', x: 1384, y: 181, width: 73, height: 77 }
+      { id: 'C-214', x: 1384, y: 181, width: 73, height: 77 },
+      { id: 'C-215', x: 1498, y: 469, width: 112, height: 121 },
+      { id: 'C-216', x: 1498, y: 595, width: 112, height: 123 },
+      { id: 'C-217', x: 1498, y: 723, width: 112, height: 121 }
     ];
 
     function pad(number) {
@@ -347,7 +350,7 @@
       newtown: {
         slug: 'yard1',
         label: 'Newtown Yard',
-        image: 'warehouse.png',
+        image: 'warehouse.png?v=20260724-1',
         width: 4860,
         height: 1800,
         displayWidth: 'min(1400px, 100%)',
