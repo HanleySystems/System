@@ -501,6 +501,23 @@
       return '';
     }
 
+    function updateMapLabel(label, container) {
+      const text = containerName(container.id);
+      const shortestSide = Math.min(container.width, container.height);
+      const fontSize = shortestSide < 70 ? 18 : shortestSide < 120 ? 24 : 34;
+      const availableWidth = Math.max(12, container.width - 8);
+
+      label.textContent = text;
+      label.removeAttribute('textLength');
+      label.removeAttribute('lengthAdjust');
+
+      // Keep renamed containers inside their existing map outline.
+      if (text.length * fontSize * 0.62 > availableWidth) {
+        label.setAttribute('textLength', availableWidth);
+        label.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+      }
+    }
+
     function showMessage(message) {
       editor.innerHTML = `<p class="empty">${escapeHtml(message)}</p>`;
     }
@@ -1007,7 +1024,7 @@
         if (labelClass) label.classList.add(labelClass);
         label.setAttribute('x', container.x + (container.width / 2));
         label.setAttribute('y', container.y + (container.height / 2));
-        label.textContent = item.size;
+        updateMapLabel(label, container);
         overlay.append(label);
       });
     }
@@ -1029,7 +1046,8 @@
       unit.classList.add(state[id].status);
       unit.setAttribute('aria-label', `${containerName(id)}, ${state[id].size}ft, ${labelFor(state[id].status)}`);
       const label = document.querySelector(`[data-label-for="${CSS.escape(id)}"]`);
-      if (label) label.textContent = state[id].size;
+      const container = getContainers().find((entry) => entry.id === id);
+      if (label && container) updateMapLabel(label, container);
     }
 
     function renderEditor() {
