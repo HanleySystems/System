@@ -326,7 +326,15 @@
       return cells;
     }
 
-    const WICKLOW_A_REMOVED_CONTAINERS = new Set(['WA-057', 'WA-058']);
+    const WICKLOW_A_REMOVED_CONTAINERS = new Set([
+      'WA-012',
+      'WA-013',
+      'WA-014',
+      'WA-015',
+      'WA-016',
+      'WA-057',
+      'WA-058'
+    ]);
 
     const WICKLOW_A_CONTAINERS = makeCells('WA', [
       { xs: [65, 157, 250, 343, 436, 529, 622, 715, 808, 901, 994, 1087, 1180], ys: [33, 105] },
