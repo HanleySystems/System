@@ -250,7 +250,7 @@
 
     function remapNewtownContainer(container) {
       // The revised plan removes these former positions altogether.
-      if (['C-061', 'C-176', 'C-183', 'C-184', 'C-185', 'C-186', 'C-187', 'C-208'].includes(container.id)) return null;
+      if (['C-061', 'C-176', 'C-183', 'C-184', 'C-185', 'C-186', 'C-187', 'C-207', 'C-208'].includes(container.id)) return null;
 
       let x = container.x - 1086;
       let y = container.y - 3;
