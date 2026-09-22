@@ -326,6 +326,10 @@
       return cells;
     }
 
+    function assignIds(cells, ids) {
+      return cells.map((cell, index) => ({ ...cell, id: ids[index] }));
+    }
+
     const WICKLOW_A_REMOVED_CONTAINERS = new Set([
       'WA-012',
       'WA-013',
@@ -344,7 +348,7 @@
       { xs: [235, 336, 437, 538, 639, 740, 841, 942], ys: [786, 857] }
     ]).filter((container) => !WICKLOW_A_REMOVED_CONTAINERS.has(container.id));
 
-    const WICKLOW_B_CONTAINERS = makeCells('WB', [
+    const WICKLOW_B_BASE_CONTAINERS = makeCells('WB', [
       { xs: [48, 138, 243, 299, 356, 412, 469, 526, 582, 639, 720, 809], ys: [33, 105] },
       { xs: [32, 97], ys: [138, 183, 227, 272, 316, 361, 405, 450, 494, 539, 583, 628, 672, 716] },
       { xs: [1085, 1151], ys: [138, 210] },
@@ -353,6 +357,60 @@
       { xs: [437, 551, 664, 778, 891, 1004], ys: [786, 857] },
       { xs: [1085, 1151], ys: [786, 857] }
     ]);
+
+    const WICKLOW_B_LEFT_COLUMN = assignIds(
+      makeCells('WB', [{
+        xs: [30, 95],
+        ys: [113, 156, 201, 245, 290, 333, 378, 422, 467, 511, 556, 600, 645, 689, 734, 778, 823, 867]
+      }]),
+      [
+        'WB-063', 'WB-064', 'WB-065', 'WB-066',
+        'WB-012', 'WB-013', 'WB-014', 'WB-015', 'WB-016', 'WB-017', 'WB-018',
+        'WB-019', 'WB-020', 'WB-021', 'WB-022', 'WB-023', 'WB-024'
+      ]
+    ).map((container, index) => ({
+      ...container,
+      defaultName: index < 4 ? `WS${index + 60}` : `WS${63 - index}`
+    }));
+
+    const WICKLOW_B_RIGHT_COLUMN = assignIds(
+      makeCells('WB', [{
+        xs: [1084, 1150],
+        ys: [206, 250, 293, 337, 381, 424, 468, 512, 555, 599, 643]
+      }]),
+      ['WB-026', 'WB-027', 'WB-028', 'WB-029', 'WB-030', 'WB-031', 'WB-032', 'WB-033', 'WB-034', 'WB-035']
+    );
+
+    const WICKLOW_B_TOP_RIGHT_CONTAINER = cell('WB-025', 1084, 133, 1150, 206);
+
+    const WICKLOW_B_TOP_ADDITION = {
+      id: 'WB-067',
+      defaultName: 'WS75',
+      x: 809,
+      y: 33,
+      width: 89,
+      height: 72
+    };
+
+    const WICKLOW_B_BOTTOM_RIGHT_EXISTING = cell('WB-062', 1085, 783, 1150, 855);
+    const WICKLOW_B_BOTTOM_RIGHT_ADDITION = {
+      ...cell('WB-068', 1150, 783, 1214, 855),
+      defaultName: 'WS87'
+    };
+
+    const WICKLOW_B_CONTAINERS = [
+      ...WICKLOW_B_BASE_CONTAINERS.filter((container) => Number(container.id.slice(3)) <= 11),
+      WICKLOW_B_TOP_ADDITION,
+      ...WICKLOW_B_LEFT_COLUMN,
+      WICKLOW_B_TOP_RIGHT_CONTAINER,
+      ...WICKLOW_B_RIGHT_COLUMN,
+      ...WICKLOW_B_BASE_CONTAINERS.filter((container) => {
+        const number = Number(container.id.slice(3));
+        return number >= 41 && number !== 62;
+      }),
+      WICKLOW_B_BOTTOM_RIGHT_EXISTING,
+      WICKLOW_B_BOTTOM_RIGHT_ADDITION
+    ];
 
     const yardConfigs = {
       newtown: {
@@ -674,7 +732,7 @@
       const rows = getContainers().map((container) => ({
         yard_id: yardId,
         internal_code: container.id,
-        display_name: container.id,
+        display_name: container.defaultName || container.id,
         size_ft: Number(inferSize(container)),
         status: 'available',
         updated_by: staffId
@@ -755,7 +813,7 @@
           rentalId: activeRental?.id || null,
           customerId: customer?.id || null,
           status: fromDbStatus(row?.status || 'available'),
-          name: row?.display_name || container.id,
+          name: row?.display_name || container.defaultName || container.id,
           size: String(row?.size_ft || inferSize(container)),
           customer: customer?.name || '',
           phone: customer?.phone || '',
